@@ -1,0 +1,9 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API de Contacto",
+    "version": "1.0.0",
+    "description": "API para guardar formularios de contacto"
+  },
+  "paths": {}
+}
