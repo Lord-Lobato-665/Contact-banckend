@@ -5,6 +5,8 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const cors = require('cors');
 
+require('dotenv').config()
+
 const app = express();
 const PORT = 3000;
 

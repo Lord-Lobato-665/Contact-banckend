@@ -1,8 +1,7 @@
-const { poolPromise } = require('../config/db.config');
+const db = require('../config/db.config');
 const axios = require('axios');
 
-// Clave secreta directa para la tarea
-const RECAPTCHA_SECRET_KEY = '6Lf5yW4rAAAAAEJs8Kjrj3ooxPGciZK83GMY-a8Y';
+//const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY;
 
 const createContact = async (req, res) => {
   const { name, email, message, recaptchaToken, acceptedTerms } = req.body;
@@ -18,7 +17,7 @@ const createContact = async (req, res) => {
       null,
       {
         params: {
-          secret: RECAPTCHA_SECRET_KEY,
+          secret: '6LehcHUrAAAAAFfkIKLhdTfgsVS3E0yOittUhp0A',
           response: recaptchaToken,
         },
       }
@@ -28,36 +27,33 @@ const createContact = async (req, res) => {
       return res.status(403).json({ error: 'reCAPTCHA no aprobado' });
     }
 
-    // Guardar en base de datos
-    const pool = await poolPromise;
+    // Insertar en SQLite
+    const query = `
+      INSERT INTO Contacts (name, email, message, recaptcha_passed, accepted_terms)
+      VALUES (?, ?, ?, ?, ?)
+    `;
 
-    await pool.request()
-      .input('name', name)
-      .input('email', email)
-      .input('message', message)
-      .input('recaptcha_passed', true)
-      .input('accepted_terms', acceptedTerms ? 1 : 0)
-      .query(`
-        INSERT INTO Contacts (name, email, message, recaptcha_passed, accepted_terms)
-        VALUES (@name, @email, @message, @recaptcha_passed, @accepted_terms)
-      `);
-
-    res.status(201).json({ message: 'Contacto guardado exitosamente' });
+    db.run(query, [name, email, message, 1, acceptedTerms ? 1 : 0], function (err) {
+      if (err) {
+        console.error('Error al guardar contacto:', err.message);
+        return res.status(500).json({ error: 'Error al guardar contacto' });
+      }
+      res.status(201).json({ message: 'Contacto guardado exitosamente', id: this.lastID });
+    });
   } catch (error) {
-    console.error('Error al guardar contacto:', error.message);
+    console.error('Error al procesar contacto:', error.message);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
 
-const getContacts = async (req, res) => {
-  try {
-    const pool = await poolPromise;
-    const result = await pool.request().query('SELECT * FROM Contacts ORDER BY id DESC');
-    res.status(200).json(result.recordset);
-  } catch (error) {
-    console.error('Error al obtener contactos:', error.message);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
+const getContacts = (req, res) => {
+  db.all('SELECT * FROM Contacts ORDER BY id DESC', [], (err, rows) => {
+    if (err) {
+      console.error('Error al obtener contactos:', err.message);
+      return res.status(500).json({ error: 'Error al obtener contactos' });
+    }
+    res.status(200).json(rows);
+  });
 };
 
 module.exports = {

@@ -1,26 +1,15 @@
-const sql = require('mssql');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-const config = {
-  user: 'sa',
-  password: 'lordlob665',
-  server: 'localhost',
-  port: 1433, // o el puerto que hayas configurado
-  database: 'FormularioDB',
-  options: {
-    encrypt: false,
-    trustServerCertificate: true,
+const dbPath = path.resolve(__dirname, '../database.sqlite');
+
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('❌ Error al conectar a SQLite:', err.message);
+    process.exit(1);
+  } else {
+    console.log('🔌 Conectado a SQLite');
   }
-};
+});
 
-
-const poolPromise = new sql.ConnectionPool(config)
-  .connect()
-  .then(pool => {
-    console.log('🔌 Conectado a SQL Server');
-    return pool;
-  })
-  .catch(err => console.log('❌ Error de conexión:', err));
-
-module.exports = {
-  sql, poolPromise,
-};
+module.exports = db;
