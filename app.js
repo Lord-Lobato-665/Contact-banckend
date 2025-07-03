@@ -15,9 +15,9 @@ app.use(cors());
 
 // O configuración más estricta para permitir solo tu frontend
 app.use(cors({
-  origin: 'https://www.gael-lobato.space', // Cambia a la URL donde corre tu frontend Vue
+  origin: ['https://www.gael-lobato.space', 'https://gael-lobato.space'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true, // si usas cookies o auth que requiere credenciales
+  credentials: true,
 }));
 
 // Swagger config
