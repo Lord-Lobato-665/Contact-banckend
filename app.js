@@ -14,11 +14,7 @@ const PORT = 3000;
 app.use(cors());
 
 // O configuración más estricta para permitir solo tu frontend
-app.use(cors({
-  origin: ['https://www.gael-lobato.space', 'https://gael-lobato.space'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
-}));
+app.use(cors()); // permite TODOS los orígenes
 
 // Swagger config
 const swaggerDefinition = {
