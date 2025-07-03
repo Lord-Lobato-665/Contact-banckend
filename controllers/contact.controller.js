@@ -11,7 +11,7 @@ const createContact = (req, res) => {
     }
 
     const mailOptions = {
-  from: `"Formulario Contacto" <${process.env.MAIL_USER}>`,
+  from: '"Formulario Contacto" <gaelsanchez509@gmail.com>',
   to: process.env.MAIL_TO,
   subject: 'Nuevo mensaje de contacto',
   html: `
