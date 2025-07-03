@@ -17,7 +17,7 @@ const createContact = async (req, res) => {
       null,
       {
         params: {
-          secret: '6LehcHUrAAAAAFfkIKLhdTfgsVS3E0yOittUhp0A',
+          secret: '6LfGkHUrAAAAAJGNfAZpet92umhpk-E4Kx5jpafo',
           response: recaptchaToken,
         },
       }
