@@ -35,6 +35,8 @@ const { createContact, getContacts } = require('../controllers/contact.controlle
  *   get:
  *     summary: Obtener todos los contactos
  *     tags: [Contacto]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de contactos
@@ -57,6 +59,9 @@ const { createContact, getContacts } = require('../controllers/contact.controlle
  *         description: Error al obtener los contactos
  */
 router.post('/contact', createContact);
-router.get('/contact', getContacts);
+
+const { authMiddleware } = require('../middleware/auth.middleware');
+router.get('/contact', authMiddleware, getContacts);
+
 
 module.exports = router;

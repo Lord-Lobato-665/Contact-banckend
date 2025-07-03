@@ -1,6 +1,6 @@
 const db = require('./config/db.config');
 
-const createTable = `
+const createContactsTable = `
   CREATE TABLE IF NOT EXISTS Contacts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -11,9 +11,25 @@ const createTable = `
   );
 `;
 
-db.run(createTable, (err) => {
+const createUsersTable = `
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+  );
+`;
+
+// Ejecutar creación de tablas
+db.run(createContactsTable, (err) => {
   if (err) {
-    return console.error('❌ Error al crear tabla:', err.message);
+    return console.error('❌ Error al crear tabla Contacts:', err.message);
   }
   console.log('✅ Tabla Contacts creada');
+});
+
+db.run(createUsersTable, (err) => {
+  if (err) {
+    return console.error('❌ Error al crear tabla users:', err.message);
+  }
+  console.log('✅ Tabla users creada');
 });
