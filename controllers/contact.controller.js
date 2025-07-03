@@ -12,7 +12,7 @@ const createContact = (req, res) => {
 
     const mailOptions = {
   from: '"Formulario Contacto" <gaelsanchez509@gmail.com>',
-  to: process.env.MAIL_TO,
+  to: "gaelsanchez509@gmail.com",
   subject: 'Nuevo mensaje de contacto',
   html: `
     <div style="font-family: Arial, sans-serif; background-color: #f4f7fa; padding: 20px;">
