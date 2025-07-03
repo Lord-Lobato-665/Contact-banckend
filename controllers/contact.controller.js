@@ -1,61 +1,39 @@
 const db = require('../config/db.config');
-const transporter = require('../utils/mailer');
+const axios = require('axios');
 
-const createContact = async (req, res) => {
+// Puedes usar process.env.SLACK_WEBHOOK_URL si prefieres moverlo a un .env
+const webhookURL = 'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX'; // reemplaza con tu webhook real
+
+const createContact = (req, res) => {
   const { name, email, message } = req.body;
 
-  // Validaciones básicas
-  if (!name || !email || !message) {
-    return res.status(400).json({ error: 'Todos los campos son obligatorios' });
-  }
+  const sql = `
+    INSERT INTO Contacts (name, email, message, recaptcha_passed, accepted_terms)
+    VALUES (?, ?, ?, ?, ?)
+  `;
 
-  try {
-    // Guardar contacto en la base de datos
-    await new Promise((resolve, reject) => {
-      const sql = `
-        INSERT INTO Contacts (name, email, message, recaptcha_passed, accepted_terms)
-        VALUES (?, ?, ?, ?, ?)`;
-      db.run(sql, [name, email, message, 1, 1], function (err) {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+  db.run(sql, [name, email, message, 1, 1], function (err) {
+    if (err) {
+      console.error('❌ Error al guardar el contacto:', err.message);
+      return res.status(500).json({ error: 'Error al guardar el contacto' });
+    }
 
     console.log('✅ Contacto guardado en la base de datos');
 
-    // Enviar correo
-    const mailOptions = {
-      from: '"Formulario Contacto" <gaelsanchez509@gmail.com>',
-      to: "gaelsanchez509@gmail.com",
-      subject: 'Nuevo mensaje de contacto',
-      html: `
-        <div style="font-family: Arial, sans-serif; background-color: #f4f7fa; padding: 20px;">
-          <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-            <header style="background-color: #2a4d69; color: white; padding: 15px 20px; border-top-left-radius: 8px; border-top-right-radius: 8px;">
-              <h2 style="margin: 0; font-weight: 700;">Nuevo mensaje de contacto</h2>
-            </header>
-            <main style="padding: 20px; color: #4a4a4a; font-size: 16px; line-height: 1.5;">
-              <p><strong style="color: #1e3a5f;">Nombre:</strong> ${name}</p>
-              <p><strong style="color: #1e3a5f;">Email:</strong> ${email}</p>
-              <p><strong style="color: #1e3a5f;">Mensaje:</strong></p>
-              <p style="background-color: #e9eff5; padding: 15px; border-radius: 6px; color: #2a4d69; white-space: pre-wrap;">${message}</p>
-            </main>
-            <footer style="background-color: #cbd3da; color: #2a4d69; text-align: center; padding: 10px 20px; font-size: 12px; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
-              <p style="margin: 0;">&copy; ${new Date().getFullYear()} LobatoCorp. Todos los derechos reservados.</p>
-            </footer>
-          </div>
-        </div>
-      `,
+    const slackPayload = {
+      text: `📨 *Nuevo contacto recibido*\n*Nombre:* ${name}\n*Email:* ${email}\n*Mensaje:* ${message}`
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log('📧 Correo enviado correctamente');
-
-    res.status(201).json({ message: 'Contacto guardado y correo enviado' });
-  } catch (error) {
-    console.error('❌ Error en createContact:', error.message || error);
-    res.status(500).json({ error: 'Error al procesar el contacto' });
-  }
+    axios.post(webhookURL, slackPayload)
+      .then(() => {
+        console.log('✅ Notificación enviada a Slack');
+        res.status(201).json({ message: 'Contacto guardado y notificación enviada' });
+      })
+      .catch((error) => {
+        console.error('❌ Error al enviar a Slack:', error.message);
+        res.status(201).json({ message: 'Contacto guardado, pero falló la notificación' });
+      });
+  });
 };
 
 const getContacts = (req, res) => {
