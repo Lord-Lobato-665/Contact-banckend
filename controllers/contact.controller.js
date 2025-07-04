@@ -1,10 +1,16 @@
 const db = require('../config/db.config');
-const axios = require('axios');
+const { App } = require('@slack/bolt');
+require('dotenv').config(); // Asegúrate de que esté aquí
 
-// Puedes usar process.env.SLACK_WEBHOOK_URL si prefieres moverlo a un .env
-const webhookURL = 'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX'; // reemplaza con tu webhook real
+// Slack config desde .env
+const slackApp = new App({
+  token: process.env.SLACK_BOT_TOKEN,
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
+});
 
-const createContact = (req, res) => {
+const SLACK_CHANNEL_ID = process.env.SLACK_CHANNEL_ID;
+
+const createContact = async (req, res) => {
   const { name, email, message } = req.body;
 
   const sql = `
@@ -12,27 +18,27 @@ const createContact = (req, res) => {
     VALUES (?, ?, ?, ?, ?)
   `;
 
-  db.run(sql, [name, email, message, 1, 1], function (err) {
+  db.run(sql, [name, email, message, 1, 1], async function (err) {
     if (err) {
       console.error('❌ Error al guardar el contacto:', err.message);
       return res.status(500).json({ error: 'Error al guardar el contacto' });
     }
 
-    console.log('✅ Contacto guardado en la base de datos');
+    console.log('✅ Contacto guardado en SQLite');
 
-    const slackPayload = {
-      text: `📨 *Nuevo contacto recibido*\n*Nombre:* ${name}\n*Email:* ${email}\n*Mensaje:* ${message}`
-    };
-
-    axios.post(webhookURL, slackPayload)
-      .then(() => {
-        console.log('✅ Notificación enviada a Slack');
-        res.status(201).json({ message: 'Contacto guardado y notificación enviada' });
-      })
-      .catch((error) => {
-        console.error('❌ Error al enviar a Slack:', error.message);
-        res.status(201).json({ message: 'Contacto guardado, pero falló la notificación' });
+    // ➤ Enviar a Slack
+    try {
+      const response = await slackApp.client.chat.postMessage({
+        channel: SLACK_CHANNEL_ID,
+        text: `📩 *Nuevo contacto recibido:*\n*Nombre:* ${name}\n*Email:* ${email}\n*Mensaje:* ${message}`,
       });
+
+      console.log('✅ Mensaje enviado a Slack', response);
+    } catch (error) {
+      console.error('❌ Error al enviar mensaje a Slack:', error.data || error.message);
+    }
+
+    res.status(201).json({ message: 'Contacto guardado y enviado a Slack' });
   });
 };
 
